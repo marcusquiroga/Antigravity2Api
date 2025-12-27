@@ -10,19 +10,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  bump-version:
-    if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.ref }}
 
       - name: Bump package.json version (commit time)
+        if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
         run: |
           COMMIT_TIME="$(git show -s --format=%cI "${GITHUB_SHA}")"
           VERSION="$(date -u -d "${COMMIT_TIME}" +%Y.%m.%d-t%H%M%S)"
@@ -46,18 +48,7 @@ jobs:
           fi
 
           git commit -m "chore: bump version to ${VERSION}"
-          git push
-
-  build-and-push:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.actor == 'github-actions[bot]')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+          git push origin HEAD:${GITHUB_REF_NAME}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -86,4 +77,3 @@ jobs:
           tags: ${{ env.IMAGE }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
