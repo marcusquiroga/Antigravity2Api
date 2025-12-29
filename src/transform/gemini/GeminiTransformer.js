@@ -130,6 +130,9 @@ function wrapRequest(clientJson, options) {
   // Map preview model name based on thinking level (high/low)
   let mappedModelName = modelName;
   const levelForMapping = innerRequest?.generationConfig?.thinkingConfig?.thinkingLevel;
+  if (modelName === "gemini-3-flash-preview") {
+    mappedModelName = "gemini-3-flash";
+  }
   if (modelName === "gemini-3-pro-preview" && typeof levelForMapping === "string") {
     const lvl = levelForMapping.toLowerCase();
     if (lvl === "high") mappedModelName = "gemini-3-pro-high";
