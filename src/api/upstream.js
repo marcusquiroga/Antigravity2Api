@@ -223,7 +223,7 @@ class UpstreamClient {
         throw e;
       }
 
-      const accountName = creds?.account?.filePath ? path.basename(creds.account.filePath) : "unknown-account";
+      const accountName = creds?.account?.keyName || "unknown-account";
       const requestBody = buildBody(creds.projectId);
       let startTime = Date.now();
 

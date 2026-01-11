@@ -1,4 +1,3 @@
-const path = require("path");
 const httpClient = require("../auth/httpClient");
 
 function getAccountsPayload(authManager) {
@@ -32,7 +31,7 @@ async function reloadAccounts(authManager) {
 
 async function getAccountQuota(authManager, fileName, upstreamClient) {
   const safeName = String(fileName || "").trim();
-  const account = authManager.accounts.find((acc) => path.basename(acc.filePath) === safeName);
+  const account = authManager.accounts.find((acc) => acc.keyName === safeName);
   
   if (!account) {
     throw new Error("Account not found");
