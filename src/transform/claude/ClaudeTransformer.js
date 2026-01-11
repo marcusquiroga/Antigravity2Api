@@ -929,6 +929,11 @@ function transformClaudeRequestIn(claudeReq, projectId, options = {}) {
       for (const item of claudeReq.system) {
         if (item && item.type === "text") {
           let text = item.text || "";
+          // Claude Code 会注入一整段“CLI 工具说明/内置工具列表/使用规则”等超长提示词；
+          // 对上游模型没有必要且容易触发 "Prompt is too long"，这里直接丢弃该段。
+          if (typeof text === "string" && text.includes("You are an interactive CLI tool that helps users with software engineering tasks.")) {
+            continue;
+          }
           if (!mcpXmlEnabled) {
             const injectedResult = maybeInjectMcpHintIntoSystemText({
               text,
