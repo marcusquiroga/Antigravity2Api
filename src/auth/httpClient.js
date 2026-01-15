@@ -93,8 +93,10 @@ async function fetchProjectId(accessToken, limiter) {
   return { projectId: data?.cloudaicompanionProject, rawBody };
 }
 
-async function fetchAvailableModels(accessToken, limiter) {
+async function fetchAvailableModels(accessToken, limiter, projectId) {
   await waitForApiSlot(limiter);
+  // Pass projectId to get real quota data (not default 100%)
+  const payload = projectId ? { project: projectId } : {};
   const response = await fetch(buildV1InternalUrl("fetchAvailableModels"), {
     method: "POST",
     headers: {
@@ -102,7 +104,7 @@ async function fetchAvailableModels(accessToken, limiter) {
       Authorization: `Bearer ${accessToken}`,
       "User-Agent": "antigravity/ windows/arm64",
     },
-    body: JSON.stringify({}),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
