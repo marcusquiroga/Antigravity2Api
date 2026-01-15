@@ -59,12 +59,21 @@ async function getAccountQuota(authManager, fileName, upstreamClient) {
         const quota = m.quotaInfo || {};
         const limit =
           quota.remainingFraction !== undefined ? `${Math.round(quota.remainingFraction * 100)}%` : "-";
-        const reset = quota.resetTime ? formatLocalDateTime(new Date(quota.resetTime)) : "-";
+        let resetTimeMs = null;
+        let reset = "-";
+        if (quota.resetTime) {
+          const d = new Date(quota.resetTime);
+          if (Number.isFinite(d.getTime())) {
+            resetTimeMs = d.getTime();
+            reset = formatLocalDateTime(d);
+          }
+        }
 
         result.push({
           model: modelId,
           limit,
           reset,
+          resetTimeMs,
         });
       }
     }
