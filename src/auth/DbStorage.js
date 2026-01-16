@@ -54,7 +54,12 @@ class DbStorage {
       [k]
     );
     if (result.rows.length === 0) return null;
-    return JSON.parse(result.rows[0].data_content);
+    try {
+      return JSON.parse(result.rows[0].data_content);
+    } catch (err) {
+      const message = err && err.message ? err.message : String(err);
+      throw new Error(`Invalid JSON stored for key "${k}": ${message}`);
+    }
   }
 
   async set(key, data) {
@@ -87,13 +92,16 @@ class DbStorage {
     const result = await this.pool.query(
       "SELECT key_name, data_content FROM app_storage ORDER BY key_name"
     );
-    return result.rows.map((row) => {
-      let data = null;
+    const entries = [];
+    for (const row of result.rows) {
       try {
-        data = JSON.parse(row.data_content);
-      } catch (_) {}
-      return { key: row.key_name, data };
-    });
+        const data = JSON.parse(row.data_content);
+        entries.push({ key: row.key_name, data });
+      } catch (_) {
+        // Skip invalid JSON rows (corrupted storage).
+      }
+    }
+    return entries;
   }
 
   async close() {

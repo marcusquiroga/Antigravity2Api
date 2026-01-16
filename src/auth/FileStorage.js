@@ -3,7 +3,7 @@ const path = require("path");
 
 class FileStorage {
   constructor() {
-    this.authDir = path.join(process.cwd(), "auth");
+    this.authDir = path.join(process.cwd(), "auths");
     this.initPromise = null;
     this.initialized = false;
   }
@@ -64,7 +64,26 @@ class FileStorage {
     await this.init();
     const filePath = path.join(this.authDir, k);
     const content = JSON.stringify(data, null, 2);
-    await fs.writeFile(filePath, content, { encoding: "utf8", mode: 0o600 });
+
+    const tmpPath = path.join(this.authDir, `.${k}.${process.pid}.${Date.now()}.tmp`);
+    await fs.writeFile(tmpPath, content, { encoding: "utf8", mode: 0o600 });
+    try {
+      await fs.rename(tmpPath, filePath);
+    } catch (err) {
+      // Windows can't rename over existing files; fall back to replace.
+      if (err && (err.code === "EEXIST" || err.code === "EPERM")) {
+        await fs.unlink(filePath).catch(() => {});
+        try {
+          await fs.rename(tmpPath, filePath);
+        } catch (err2) {
+          await fs.unlink(tmpPath).catch(() => {});
+          throw err2;
+        }
+        return;
+      }
+      await fs.unlink(tmpPath).catch(() => {});
+      throw err;
+    }
   }
 
   async delete(key) {
