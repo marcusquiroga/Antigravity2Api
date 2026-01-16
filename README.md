@@ -178,6 +178,12 @@ cp .env.example .env
 docker compose -f docker-compose.ghcr.yml up -d
 ```
 
+3) 更新版本：
+
+```bash
+docker compose -f docker-compose.ghcr.yml up -d --pull always
+```
+
 > 私有仓库/私有镜像需要先登录：`docker login ghcr.io`
 
 ### 6.2 本地构建（可选）
