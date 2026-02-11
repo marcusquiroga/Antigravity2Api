@@ -45,6 +45,7 @@ function mapClaudeModelToGemini(claudeModel) {
 
   const supportedModels = [
     "claude-opus-4-5-thinking",
+    "claude-opus-4-6-thinking",
     "claude-sonnet-4-5",
     "claude-sonnet-4-5-thinking",
     "gemini-3-pro-high",
@@ -60,6 +61,7 @@ function mapClaudeModelToGemini(claudeModel) {
     "claude-sonnet-4-5-20250929": "claude-sonnet-4-5-thinking",
     "claude-opus-4-5-20251101": "claude-opus-4-5-thinking",
     "claude-opus-4-5": "claude-opus-4-5-thinking",
+    "claude-opus-4-6": "claude-opus-4-6-thinking",
   };
   return mapping[model];
 }
