@@ -1,6 +1,7 @@
 const path = require("path");
 
 const httpClient = require("../auth/httpClient");
+const { updateFromFetchAvailableModels } = require("../transform/upstreamModelStore");
 
 function parseEnvNonNegativeInt(name, fallback) {
   const raw = process.env[name];
@@ -125,6 +126,8 @@ class QuotaRefresher {
   updateQuotaCacheFromModels(accountKey, models, nowMs) {
     const now = Number.isFinite(nowMs) ? nowMs : Date.now();
     if (!models || typeof models !== "object") return;
+
+    updateFromFetchAvailableModels(models);
 
     for (const modelId of Object.keys(models)) {
       const quotaInfo = models[modelId]?.quotaInfo || {};

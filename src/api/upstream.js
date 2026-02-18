@@ -2,6 +2,7 @@ const path = require("path");
 
 const httpClient = require("../auth/httpClient");
 const QuotaRefresher = require("./QuotaRefresher");
+const { updateFromFetchAvailableModels } = require("../transform/upstreamModelStore");
 
 function parseEnvNonNegativeInt(name, fallback) {
   const raw = process.env[name];
@@ -526,7 +527,9 @@ class UpstreamClient {
   async fetchAvailableModels() {
     const { accessToken, projectId } = await this.auth.getCredentials();
     this.logger.log("info", `📋 获取可用模型列表 (projectId: ${projectId || "none"})`);
-    return httpClient.fetchAvailableModels(accessToken, this.auth.apiLimiter, projectId);
+    const models = await httpClient.fetchAvailableModels(accessToken, this.auth.apiLimiter, projectId);
+    updateFromFetchAvailableModels(models);
+    return models;
   }
 
   async fetchAvailableModelsByAccountIndex(accountIndex) {

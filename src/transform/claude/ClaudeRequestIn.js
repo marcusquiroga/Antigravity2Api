@@ -10,6 +10,7 @@ const {
   buildMcpToolResultXml,
 } = require("../../mcp/mcpXmlBridge");
 const { mapClaudeModelFromEnv } = require("../modelMap");
+const { resolveKnownModelId } = require("../upstreamModelStore");
 const { getToolThoughtSignature, deleteToolThoughtSignature, isDebugEnabled } = require("./ToolThoughtSignatureStore");
 const { cleanJsonSchema, extractInlineDataPartsFromClaudeToolResultContent } = require("./ClaudeRequestUtils");
 
@@ -43,11 +44,15 @@ function mapClaudeModelToGemini(claudeModel) {
   const envMapped = mapClaudeModelFromEnv(model);
   if (envMapped) return envMapped;
 
+  const dynamicKnown = resolveKnownModelId(model);
+  if (dynamicKnown) return dynamicKnown;
+
   const supportedModels = [
     "claude-opus-4-5-thinking",
     "claude-opus-4-6-thinking",
     "claude-sonnet-4-5",
     "claude-sonnet-4-5-thinking",
+    "claude-sonnet-4-6",
     "gemini-3-pro-high",
     "gemini-3-pro-low",
     "gemini-3-flash",
