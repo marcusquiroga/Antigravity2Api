@@ -27,6 +27,41 @@ function uppercaseSchemaTypes(schema) {
   return normalized;
 }
 
+function mergeEnumAnyOf(anyOf) {
+  if (!Array.isArray(anyOf) || anyOf.length === 0) return null;
+
+  let mergedType = null;
+  const mergedEnum = [];
+  const seen = new Set();
+  const allowedKeys = new Set(["type", "enum", "description", "title"]);
+
+  for (const option of anyOf) {
+    if (!option || typeof option !== "object" || Array.isArray(option)) return null;
+    if (!Array.isArray(option.enum) || option.enum.length === 0) return null;
+
+    if (option.type !== undefined) {
+      if (typeof option.type !== "string" || option.type.length === 0) return null;
+      if (mergedType === null) mergedType = option.type;
+      else if (mergedType !== option.type) return null;
+    }
+
+    // Only merge simple enum options (avoid incorrectly flattening complex subschemas).
+    for (const key of Object.keys(option)) {
+      if (!allowedKeys.has(key)) return null;
+    }
+
+    for (const value of option.enum) {
+      const token = `${typeof value}:${String(value)}`;
+      if (seen.has(token)) continue;
+      seen.add(token);
+      mergedEnum.push(value);
+    }
+  }
+
+  if (mergedEnum.length === 0) return null;
+  return { type: mergedType, enum: mergedEnum };
+}
+
 /**
  * 清理 JSON Schema 以符合 Gemini 格式
  */
@@ -107,6 +142,17 @@ function cleanJsonSchema(schema) {
 
   if (validations.length > 0 && !cleaned.description) {
     cleaned.description = `Validation: ${validations.join(", ")}`;
+  }
+
+  // v1internal / Claude-on-Vertex tool schemas reject JSON Schema combinators like `anyOf` in practice.
+  // Flatten the common pattern of enum unions: { anyOf: [{type, enum}, ...] } -> { type, enum }.
+  if (Array.isArray(cleaned.anyOf)) {
+    const merged = mergeEnumAnyOf(cleaned.anyOf);
+    if (merged) {
+      delete cleaned.anyOf;
+      if (merged.type && !cleaned.type) cleaned.type = merged.type;
+      if (!cleaned.enum) cleaned.enum = merged.enum;
+    }
   }
 
   return uppercaseSchemaTypes(cleaned);
